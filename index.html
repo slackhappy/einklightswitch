@@ -1,0 +1,122 @@
+<html>
+  <meta name="viewport" content="width=240, minimal-ui" />
+<style>
+body { width:240; height: 240; }
+.bordered { float:left; border: 1px solid gray; }
+.canvasdiv { float: left; width: 110; height: 230; background: gray;} 
+#can { margin-top: 6px; margin-left:2px }
+.controlsdiv { width: 110; height: 230; } 
+.brush { float: left; width: 33; margin:10px; height: 20; border: 1px solid gray;} 
+</style>
+<script type="text/javascript">
+var canvas, ctx, shouldDraw = false,
+prevX = 0,
+currX = 0,
+prevY = 0,
+currY = 0,
+debug, 
+timeoutId;
+
+var stroke = "black",
+strokeWeight = 2;
+
+function init() {
+    canvas = document.getElementById('can');
+    debug = document.getElementById('debug');
+    ctx = canvas.getContext("2d");
+
+    ctx.beginPath();
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.closePath();
+
+    canvas.addEventListener("touchmove", function (e) {
+      handleEvent('touchmove', e)
+        }, false);
+    canvas.addEventListener("mousemove", function (e) {
+      handleEvent('move', e)
+        }, false);
+    canvas.addEventListener("mousedown", function (e) {
+      handleEvent('down', e)
+        }, false);
+    canvas.addEventListener("touchstart", function (e) {
+      handleEvent('down', e)
+        }, false);
+    canvas.addEventListener("mouseup", function (e) {
+      handleEvent('up', e)
+        }, false);
+}
+
+function color(obj) {
+  stroke = obj.id;
+  if (stroke == "white") strokeWeight = 14;
+  else strokeWeight = 2;
+}
+
+function draw() {
+  ctx.beginPath();
+  ctx.moveTo(prevX, prevY);
+  ctx.lineTo(currX, currY);
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = strokeWeight
+  ctx.stroke();
+  ctx.closePath();
+  if (timeoutId) {
+    clearTimeout(timeoutId);
+  }
+  timeoutId = setTimeout(postCanvas, 20000);
+}
+
+function postCanvas() {
+  console.log('posting');
+  canvas.toBlob(function(blob) {
+    httpRequest = new XMLHttpRequest();
+    httpRequest.open('POST', '/image', true);
+    httpRequest.setRequestHeader('Content-Type', 'image/png');
+    httpRequest.send(blob);
+  });
+}
+
+function handleEvent(eventType, e) {
+  prevX = currX;
+  prevY = currY;
+  if (eventType == 'touchmove' && e.touches) {
+    e.preventDefault();
+    currX = e.touches[0].clientX - canvas.offsetLeft;
+    currY = e.touches[0].clientY - canvas.offsetTop;
+  } else {
+    currX = e.clientX - canvas.offsetLeft;
+    currY = e.clientY - canvas.offsetTop;
+  }
+  currX = Math.min(Math.max(currX, 0), canvas.width);
+  currY = Math.min(Math.max(currY, 0), canvas.height);
+
+  if (eventType == 'up' || eventType == 'out') {
+    shouldDraw = false;
+  }
+  if (eventType == 'down') {
+    shouldDraw = true;
+    ctx.beginPath();
+    ctx.fillStyle = stroke;
+    ctx.fillRect(currX, currY, 2, 2);
+    ctx.closePath();
+  }
+  if (eventType == 'move' || eventType == 'touchmove') {
+    if (shouldDraw) {
+      draw();
+    }
+  }
+}
+</script>
+<body onload="init()">
+  <div class="canvasdiv bordered">
+    <canvas class="bordered" id="can" width="104" height="212"></canvas>
+  </div>
+  <div class="controlsdiv bordered">
+      <div class="brush" style="background:red" id="red" onclick="color(this)"></div></td>
+      <div class="brush" style="background:black" id="black" onclick="color(this)"></div></td>
+      <div class="brush" style="background:white" id="white" onclick="color(this)"></div></td>
+  </div>
+  <div id="debug"></div>
+</body>
+</html>
