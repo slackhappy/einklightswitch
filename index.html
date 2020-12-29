@@ -94,7 +94,7 @@
       if (eventType == 'mouseup') {
         shouldDraw = false;
       }
-      if (eventType == 'mousedown') {
+      if (eventType == 'mousedown' || eventType == 'touchstart') {
         shouldDraw = true;
         draw(curr, {x: curr.x + 2, y: curr.y + 2});
       }

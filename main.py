@@ -102,7 +102,7 @@ def run(args, epd):
 
     if epd:
         logger.info("initializing device")
-        epd.Init()
+        epd.init()
         epd.Clear()
 
     try:
@@ -145,11 +145,11 @@ if __name__ == "__main__":
         print(libdir)
         sys.path.append(os.path.join(libdir))
         try:
-            module = __import__("waveshare_epd", fromlist=(args.device,))
+            module = getattr(__import__("waveshare_epd", fromlist=(args.device,)), args.device)
         except:
-            logger.exception("Failed to load device %s", device)
+            logger.exception("Failed to load device %s", args.device)
             raise
         epd = module.EPD()
-        logger.info("initialized device %s", device)
+        logger.info("initialized device %s", args.device)
 
     run(args, epd)
