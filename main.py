@@ -71,6 +71,7 @@ def put(image):
 
 
 def worker(args, epd):
+    savedir = args.dir
     os.makedirs(savedir, exist_ok=True)
     processor = ImageProcessor(savedir)
     while True:

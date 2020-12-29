@@ -167,8 +167,8 @@
 
     function handleEvent(eventType, e) {
       prev = curr;
+      e.preventDefault();
       if (eventType == 'touchmove' && e.touches) {
-        e.preventDefault();
         curr = canvasPosition(e.touches[0]);
       } else {
         curr = canvasPosition(e);
