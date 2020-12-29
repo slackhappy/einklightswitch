@@ -70,21 +70,30 @@ def put(image):
         print("Could not enqueue image")
 
 
-def worker(savedir, epd):
+def worker(args, epd):
     os.makedirs(savedir, exist_ok=True)
     processor = ImageProcessor(savedir)
     while True:
+        # take an image
         image = render_queue.get()
         logger.debug("got an image")
         processor.save(image)
+
+        # split it into 3 colors
         logger.debug("quantizing")
         quantized = processor.quantize_3color(image)
-        processor.save(quantized)
+        if args.debug:
+            processor.save(quantized)
+
+        # split the 3-color image into separate black, red images
         logger.debug("separating")
         (b, r) = processor.separate_3color(quantized)
-        processor.save(b)
-        processor.save(r)
+        if args.debug:
+            processor.save(b)
+            processor.save(r)
+
         if epd:
+            # send the image to the display
             logger.debug("displaying")
             epd.display(epd.getbuffer(b), epd.getbuffer(r))
             logger.debug("done")
@@ -95,7 +104,7 @@ def run(args, epd):
     savedir = args.dir
 
     # turn-on the worker thread
-    threading.Thread(target=worker, args=(savedir, epd), daemon=True).start()
+    threading.Thread(target=worker, args=(args, epd), daemon=True).start()
 
     server_address = ("", args.port)  # INADDR_ANY, port 80
     handler = LightswitchRequestHandler
@@ -145,7 +154,9 @@ if __name__ == "__main__":
         print(libdir)
         sys.path.append(os.path.join(libdir))
         try:
-            module = getattr(__import__("waveshare_epd", fromlist=(args.device,)), args.device)
+            module = getattr(
+                __import__("waveshare_epd", fromlist=(args.device,)), args.device
+            )
         except:
             logger.exception("Failed to load device %s", args.device)
             raise

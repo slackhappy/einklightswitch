@@ -12,7 +12,7 @@
     .canvasdiv { float: left; width: 110px; height: 230px; background: gray;}
     #canvas { margin-top: 6px; margin-left:2px }
     .controlsdiv { width: 110px; height: 230px; }
-    .header { margin-left:5px; margin-top:5px;}
+    .header { clear: both; margin-left:5px; margin-top:5px;}
     .brush { float: left; width: 22px; margin:5px; height: 20px; border: 1px solid gray;}
   </style>
 
@@ -21,10 +21,13 @@
     prev = {x: 0, y: 0},
     curr = {x: 0, y: 0},
     debug,
-    timeoutId;
+    timeoutId,
+    patterns;
 
-    var stroke = "black",
+    var strokeColor = "black";
     strokeWeight = 2;
+    strokePattern = 'none';
+    stroke = strokeColor;
 
     function init() {
       canvas = document.getElementById('canvas');
@@ -36,6 +39,9 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.closePath();
 
+      updateBrushSizeBrushes();
+      updateBrushPatternBrushes();
+
       ['touchmove', 'mousemove', 'mousedown', 'touchstart', 'mouseup'].forEach(function (eventType) {
         canvas.addEventListener(eventType, function (e) {
             handleEvent(eventType, e)
@@ -43,13 +49,81 @@
       });
     }
 
+    function updateBrushSizeBrushes() {
+      var brushSizes = document.getElementsByClassName('brush-size');
+      for (let brush of brushSizes) {
+        let radiusX = (brush.dataset.size / 2) * (brush.width / brush.clientWidth);
+        let radiusY = (brush.dataset.size / 2) * (brush.height / brush.clientHeight);
+        let brushCtx = brush.getContext("2d");
+        brushCtx.beginPath();
+        brushCtx.fillStyle = strokeColor == 'white' ? 'black' : 'white';
+        brushCtx.fillRect(0, 0, brush.width, brush.height);
+        brushCtx.closePath();
+        brushCtx.beginPath();
+        brushCtx.fillStyle = strokeColor;
+        brushCtx.ellipse(brush.width / 2, brush.height / 2, radiusX, radiusY, 0, 0, 2 * Math.PI);
+        brushCtx.fill();
+        brushCtx.closePath();
+      };
+    }
+
+    function updateBrushPatternBrushes() {
+      var dotPatternCanvas = document.createElement('canvas');
+      dotPatternCanvas.width = 4;
+      dotPatternCanvas.height = 4;
+      var dotPatternCtx = dotPatternCanvas.getContext('2d');
+      dotPatternCtx.fillStyle = strokeColor == 'white' ? 'black' : strokeColor;
+      /*
+
+       X X
+
+      X X
+      */
+      dotPatternCtx.fillRect(1, 1, 1, 1);
+      dotPatternCtx.fillRect(1, 3, 1, 1);
+      dotPatternCtx.fillRect(3, 0, 1, 1);
+      dotPatternCtx.fillRect(3, 2, 1, 1);
+
+
+      patterns = {'dots': dotPatternCanvas};
+      var brushPatterns = document.getElementsByClassName('brush-pattern');
+      for (let brush of brushPatterns) {
+        let brushCtx = brush.getContext("2d");
+        let patternForName = patterns[brush.dataset.pattern];
+        let pattern = brushCtx.createPattern(patternForName, "repeat");
+        brushCtx.beginPath();
+        brushCtx.fillStyle = pattern;
+        brushCtx.fillRect(0, 0, canvas.width, canvas.height);
+      };
+    }
+
     function setBrush(obj) {
-      stroke = obj.id;
-      if (stroke == "white") strokeWeight = 14;
-      else strokeWeight = 2;
+      if (obj.dataset.color) {
+        strokeColor = obj.dataset.color;
+        updateBrushSizeBrushes();
+        updateBrushPatternBrushes();
+      }
+      if (obj.dataset.size) {
+        strokeWeight = parseInt(obj.dataset.size);
+      }
+      if (obj.dataset.pattern) {
+        strokePattern = obj.dataset.pattern;
+      }
+      if (strokePattern == 'none') {
+        stroke = strokeColor;
+      } else {
+        stroke = ctx.createPattern(patterns[strokePattern], "repeat");
+      }
+
+
     }
 
     function draw(from, to) {
+      ctx.beginPath();
+      ctx.fillStyle = stroke;
+      ctx.ellipse(from.x, from.y, strokeWeight / 2, strokeWeight / 2, 0, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.closePath();
       ctx.beginPath();
       ctx.moveTo(from.x, from.y);
       ctx.lineTo(to.x, to.y);
@@ -57,6 +131,15 @@
       ctx.lineWidth = strokeWeight
       ctx.stroke();
       ctx.closePath();
+      ctx.beginPath();
+      ctx.fillStyle = stroke;
+      ctx.ellipse(to.x, to.y, strokeWeight / 2, strokeWeight / 2, 0, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.closePath();
+      resetTimer();
+    }
+
+    function resetTimer() {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
@@ -96,7 +179,12 @@
       }
       if (eventType == 'mousedown' || eventType == 'touchstart') {
         shouldDraw = true;
-        draw(curr, {x: curr.x + 2, y: curr.y + 2});
+        ctx.beginPath();
+        ctx.fillStyle = stroke;
+        ctx.ellipse(curr.x, curr.y, strokeWeight / 2, strokeWeight / 2, 0, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.closePath();
+        resetTimer();
       }
       if (eventType == 'mousemove' || eventType == 'touchmove') {
         if (shouldDraw) {
@@ -110,10 +198,18 @@
       <canvas class="bordered" id="canvas" width="104" height="212"></canvas>
     </div>
     <div class="controlsdiv bordered">
-      <div class="header"> Color</div>
-      <div class="brush" style="background:red" id="red" onclick="setBrush(this)"></div></td>
-      <div class="brush" style="background:black" id="black" onclick="setBrush(this)"></div></td>
-      <div class="brush" style="background:white" id="white" onclick="setBrush(this)"></div></td>
+      <div class="header">Color</div>
+      <div class="brush" style="background:black" data-color="black" onclick="setBrush(this)"></div>
+      <div class="brush" style="background:red" data-color="red" onclick="setBrush(this)"></div>
+      <div class="brush" style="background:white" data-color="white" onclick="setBrush(this)"></div>
+      <div class="header">Size</div>
+      <canvas class="brush brush-size" style="background:white" data-size="2" onclick="setBrush(this)"></canvas>
+      <canvas class="brush brush-size" style="background:white" data-size="6" onclick="setBrush(this)"></canvas>
+      <canvas class="brush brush-size" style="background:white" data-size="10" onclick="setBrush(this)"></canvas>
+      <canvas class="brush brush-size" style="background:white" data-size="14" onclick="setBrush(this)"></canvas>
+      <div class="header">Pattern</div>
+      <div class="brush" data-pattern="none" onclick="setBrush(this)"></div>
+      <canvas class="brush brush-pattern" style="background:white" width="22" height="20" data-pattern="dots" onclick="setBrush(this)"></canvas>
     </div>
     <div id="debug"></div>
   </body>
