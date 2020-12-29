@@ -1,122 +1,120 @@
+<!DOCTYPE html>
+
+<!--
+  Based on
+  https://stackoverflow.com/questions/2368784/draw-on-html5-canvas-using-a-mouse
+-->
 <html>
   <meta name="viewport" content="width=240, minimal-ui" />
-<style>
-body { width:240; height: 240; }
-.bordered { float:left; border: 1px solid gray; }
-.canvasdiv { float: left; width: 110; height: 230; background: gray;} 
-#can { margin-top: 6px; margin-left:2px }
-.controlsdiv { width: 110; height: 230; } 
-.brush { float: left; width: 33; margin:10px; height: 20; border: 1px solid gray;} 
-</style>
-<script type="text/javascript">
-var canvas, ctx, shouldDraw = false,
-prevX = 0,
-currX = 0,
-prevY = 0,
-currY = 0,
-debug, 
-timeoutId;
+  <style>
+    body { width:240px; height: 240px; font-family: Arial, Helvetica, sans-serif; }
+    .bordered { float:left; border: 1px solid gray; }
+    .canvasdiv { float: left; width: 110px; height: 230px; background: gray;}
+    #canvas { margin-top: 6px; margin-left:2px }
+    .controlsdiv { width: 110px; height: 230px; }
+    .header { margin-left:5px; margin-top:5px;}
+    .brush { float: left; width: 22px; margin:5px; height: 20px; border: 1px solid gray;}
+  </style>
 
-var stroke = "black",
-strokeWeight = 2;
+  <script type="text/javascript">
+    var canvas, ctx, shouldDraw = false,
+    prev = {x: 0, y: 0},
+    curr = {x: 0, y: 0},
+    debug,
+    timeoutId;
 
-function init() {
-    canvas = document.getElementById('can');
-    debug = document.getElementById('debug');
-    ctx = canvas.getContext("2d");
+    var stroke = "black",
+    strokeWeight = 2;
 
-    ctx.beginPath();
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.closePath();
+    function init() {
+      canvas = document.getElementById('canvas');
+      debug = document.getElementById('debug');
+      ctx = canvas.getContext("2d");
 
-    canvas.addEventListener("touchmove", function (e) {
-      handleEvent('touchmove', e)
-        }, false);
-    canvas.addEventListener("mousemove", function (e) {
-      handleEvent('move', e)
-        }, false);
-    canvas.addEventListener("mousedown", function (e) {
-      handleEvent('down', e)
-        }, false);
-    canvas.addEventListener("touchstart", function (e) {
-      handleEvent('down', e)
-        }, false);
-    canvas.addEventListener("mouseup", function (e) {
-      handleEvent('up', e)
-        }, false);
-}
+      ctx.beginPath();
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.closePath();
 
-function color(obj) {
-  stroke = obj.id;
-  if (stroke == "white") strokeWeight = 14;
-  else strokeWeight = 2;
-}
-
-function draw() {
-  ctx.beginPath();
-  ctx.moveTo(prevX, prevY);
-  ctx.lineTo(currX, currY);
-  ctx.strokeStyle = stroke;
-  ctx.lineWidth = strokeWeight
-  ctx.stroke();
-  ctx.closePath();
-  if (timeoutId) {
-    clearTimeout(timeoutId);
-  }
-  timeoutId = setTimeout(postCanvas, 20000);
-}
-
-function postCanvas() {
-  console.log('posting');
-  canvas.toBlob(function(blob) {
-    httpRequest = new XMLHttpRequest();
-    httpRequest.open('POST', '/image', true);
-    httpRequest.setRequestHeader('Content-Type', 'image/png');
-    httpRequest.send(blob);
-  });
-}
-
-function handleEvent(eventType, e) {
-  prevX = currX;
-  prevY = currY;
-  if (eventType == 'touchmove' && e.touches) {
-    e.preventDefault();
-    currX = e.touches[0].clientX - canvas.offsetLeft;
-    currY = e.touches[0].clientY - canvas.offsetTop;
-  } else {
-    currX = e.clientX - canvas.offsetLeft;
-    currY = e.clientY - canvas.offsetTop;
-  }
-  currX = Math.min(Math.max(currX, 0), canvas.width);
-  currY = Math.min(Math.max(currY, 0), canvas.height);
-
-  if (eventType == 'up' || eventType == 'out') {
-    shouldDraw = false;
-  }
-  if (eventType == 'down') {
-    shouldDraw = true;
-    ctx.beginPath();
-    ctx.fillStyle = stroke;
-    ctx.fillRect(currX, currY, 2, 2);
-    ctx.closePath();
-  }
-  if (eventType == 'move' || eventType == 'touchmove') {
-    if (shouldDraw) {
-      draw();
+      ['touchmove', 'mousemove', 'mousedown', 'touchstart', 'mouseup'].forEach(function (eventType) {
+        canvas.addEventListener(eventType, function (e) {
+            handleEvent(eventType, e)
+          }, false);
+      });
     }
-  }
-}
-</script>
-<body onload="init()">
-  <div class="canvasdiv bordered">
-    <canvas class="bordered" id="can" width="104" height="212"></canvas>
-  </div>
-  <div class="controlsdiv bordered">
-      <div class="brush" style="background:red" id="red" onclick="color(this)"></div></td>
-      <div class="brush" style="background:black" id="black" onclick="color(this)"></div></td>
-      <div class="brush" style="background:white" id="white" onclick="color(this)"></div></td>
-  </div>
-  <div id="debug"></div>
-</body>
+
+    function setBrush(obj) {
+      stroke = obj.id;
+      if (stroke == "white") strokeWeight = 14;
+      else strokeWeight = 2;
+    }
+
+    function draw(from, to) {
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = strokeWeight
+      ctx.stroke();
+      ctx.closePath();
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      timeoutId = setTimeout(postCanvas, 1000);
+    }
+
+    function postCanvas() {
+      console.log('posting');
+      canvas.toBlob(function(blob) {
+        httpRequest = new XMLHttpRequest();
+        httpRequest.open('POST', '/image', true);
+        httpRequest.setRequestHeader('Content-Type', 'image/png');
+        httpRequest.send(blob);
+      });
+    }
+
+    function canvasPosition(clientXY) {
+        var x = 0, y = 0;
+        x = clientXY.clientX - canvas.offsetLeft;
+        y = clientXY.clientY - canvas.offsetTop;
+        x = Math.min(Math.max(x, 0), canvas.width);
+        y = Math.min(Math.max(y, 0), canvas.height);
+        return {'x': x, 'y': y};
+    }
+
+    function handleEvent(eventType, e) {
+      prev = curr;
+      if (eventType == 'touchmove' && e.touches) {
+        e.preventDefault();
+        curr = canvasPosition(e.touches[0]);
+      } else {
+        curr = canvasPosition(e);
+      }
+
+      if (eventType == 'mouseup') {
+        shouldDraw = false;
+      }
+      if (eventType == 'mousedown') {
+        shouldDraw = true;
+        draw(curr, {x: curr.x + 2, y: curr.y + 2});
+      }
+      if (eventType == 'mousemove' || eventType == 'touchmove') {
+        if (shouldDraw) {
+          draw(prev, curr);
+        }
+      }
+    }
+  </script>
+  <body onload="init()">
+    <div class="canvasdiv bordered">
+      <canvas class="bordered" id="canvas" width="104" height="212"></canvas>
+    </div>
+    <div class="controlsdiv bordered">
+      <div class="header"> Color</div>
+      <div class="brush" style="background:red" id="red" onclick="setBrush(this)"></div></td>
+      <div class="brush" style="background:black" id="black" onclick="setBrush(this)"></div></td>
+      <div class="brush" style="background:white" id="white" onclick="setBrush(this)"></div></td>
+    </div>
+    <div id="debug"></div>
+  </body>
 </html>
