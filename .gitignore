@@ -2,3 +2,4 @@ lib/
 img/
 waveshare-e-Paper.zip
 .venv/
+__pycache__/

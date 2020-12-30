@@ -1,0 +1,9 @@
+[Unit]
+Description=E-ink lightswitch server
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /usr/bin/einklightswitch.sh
+
+[Install]
+WantedBy=multi-user.target
