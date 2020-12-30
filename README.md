@@ -91,7 +91,7 @@ git clone https://github.com/slackhappy/einklightswitch
 python3 main.py --device epd2in13b_V3
 ```
 
-Running setup.sh downloads the library from waveshare's [e-Paper github repo](https://github.com/waveshare/e-Paper).  You can run `python3 main.py -h` to see a list of supported devices.  The library methods aren't consistent across devices so using a different method requires some tweaking of `main.py`.
+Running setup.sh downloads the library from waveshare's [e-Paper github repo](https://github.com/waveshare/e-Paper).  You can run `python3 main.py -h` to see a list of supported devices.  The library methods aren't consistent across devices so using a different device requires some tweaking of `main.py`.
 
 Once you see a message like `INFO: Server up on port X`, you should be able to connect to the server using your phone or computer with a web browser if you are on the same wireless network.
 
