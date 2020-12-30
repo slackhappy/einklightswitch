@@ -97,4 +97,4 @@ Once you see a message like `INFO: Server up on port X`, you should be able to c
 
 
 ## Installing the server to run at boot
-The service can be installed to run at boot so when you power up your pi, it runs automatically.  Once you are happy with how it works, run `sudo setup.py install`.  This will install and enable a systemd unit that will start at boot.  If you use the default port 80, you don't need to specify a port when accessing the webpage.  If you have only one raspberry pi on your network, in most cases, you can go to http://raspberrypi/ (or whatever you have set the hostname to using `raspi-config` and it should just work.
+The service can be installed to run at boot so when you power up your pi, it runs automatically.  Once you are happy with how it works, run `sudo ./setup.sh install`.  This will install and enable a systemd unit that will start at boot.  If you use the default port 80, you don't need to specify a port when accessing the webpage.  If you have only one raspberry pi on your network, in most cases, you can go to http://raspberrypi/ (or whatever you have set the hostname to using `raspi-config`) and it should just work.
