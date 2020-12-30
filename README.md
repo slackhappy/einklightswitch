@@ -1,6 +1,6 @@
 # E-ink Light Switch Display
 
-<img src="docs/demo.jpg" width="600" alt="demo>
+<img src="docs/demo.jpg" width="400" alt="demo">
 
 In our apartment, there is an extra light switch that doesn't do anything.  I decided to fill the space with an e-ink display that displays doodles or notes that you send to it.
 
