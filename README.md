@@ -33,7 +33,7 @@ For better interactive ssh performance, you can add
 ```
 IPQoS cs0 cs0
 ```
-to the end of the Pi's 
+to the end of the Pi's `/etc/ssh/sshd_config`
 
 #### Connect to the Raspberry Pi
 Assuming you set up the pi correctly, you should be able to ssh to it via its IP address (you can find that out by looking at your router's clients table).  See step 4 of the [Raspberry Pi SSH documentation](https://www.raspberrypi.org/documentation/remote-access/ssh/README.md) to connect to your Pi from another computer.
@@ -63,7 +63,7 @@ iwconfig wlan0 power off
 
 Reboot (`sudo reboot`) for these changes to take effect.
 
-#### Dependencies
+#### Install dependencies
 The server has several python dependencies:
 
 - `python3-pil` (image processing, converting the image to 3-color and monochrome)
